@@ -1,10 +1,12 @@
 import puppeteer from "puppeteer";
-import {user,pass, second_user} from "./creds.js";
+import {user,pass, second_user, third_user} from "./creds.js";
 import { argv, exit } from "node:process";
 
 const date = new Date();
 let str_date = String(date.getDate()+1)+"/"+String(date.getMonth()+1)+"/"+String(date.getFullYear());
 let username = user;
+let username2 = second_user;
+let username3 = third_user;
 let password = pass;
 const URL = "https://buresa.sorbonne-universite.fr/";
 const USERNAME_SELECTOR = "#tbLogin";
@@ -34,6 +36,7 @@ const NUMBER_OF_TR = 2;
 
 const HOURS_SELECTOR = "#ContentPlaceHolder1_heure_droite";
 const SECOND_PERSON_SELECTOR = "#ContentPlaceHolder1_rptNbParticipants_tbValue_1";
+const THIRD_PERSON_SELECTOR = "#ContentPlaceHolder1_rptNbParticipants_tbValue_2"; 
 const CONDITIONS_CHECKBOX = "#ContentPlaceHolder1_conditions";
 const VALIDATE_BUTTON = "#ContentPlaceHolder1_BtnValider";
 
@@ -169,9 +172,15 @@ function hours_to_formatted_string(start_time, max_length) {
     return hours+":"+minutes;
 }
 
-async function make_reservation(page, username, formatted_hour) {
+async function make_reservation(page, username2, username3=third_user, formatted_hour) {
     await page.focus(SECOND_PERSON_SELECTOR);
-    await page.keyboard.type(username);
+    await page.keyboard.type(username2);
+
+    let elt = await page.$(THIRD_PERSON_SELECTOR);
+    if (elt!=null) {
+        await page.focus(THIRD_PERSON_SELECTOR);
+        await page.keyboard.type(username3);
+    }
 
     await page.focus(HOURS_SELECTOR);
     await page.select(HOURS_SELECTOR,formatted_hour);
@@ -184,11 +193,12 @@ for(let i=2; i<argv.length; i++) {
         case "--help":
             console.log("Usage : node main.js [...]")
             console.log("Parameters :");
-            console.log("--help                                                 : Print this and exit.");
-            console.log("--bu {1...5}                                           : Select the bu for reservation (same order as the site).");
-            console.log("--date <DD/MM/YYYY>                                    : Select the date of reservation.");
-            console.log("--password <password>                                  : Give your password.")
-            console.log("--username <surname.name@etu.sorbonne-universite.fr>   : Give your username.");
+            console.log("--help                                                         : Print this and exit.");
+            console.log("--bu {1...5}                                                   : Select the bu for reservation (same order as the site).");
+            console.log("--date <DD/MM/YYYY>                                            : Select the date of reservation.");
+            console.log("--password <password>                                          : Give your password.")
+            console.log("--user <surname.name@etu.sorbonne-universite.fr>               : Give your username.");
+            console.log("--user2 | --user3 <surname.name@etu.sorbonne-universite.fr>    : Give the 2nd/3rd username for the reservation.");
             exit(0);
         case "--bu":
             let val = parseInt(argv[i+1]);
@@ -204,8 +214,14 @@ for(let i=2; i<argv.length; i++) {
         case "--password":
             password = argv[i+1];
             break;
-        case "--username":
+        case "--user":
             username = argv[i+1];
+            break;
+        case "--user2":
+            username2 = argv[i+1];
+            break;
+        case "--user3":
+            username3 = argv[i+1];
             break;
         default:
             break;
@@ -253,7 +269,7 @@ let str_hour = hours_to_formatted_string(start_time,max_length);
 console.log(str_hour);
 console.log("Making the reservation...");
 
-await make_reservation(page,second_user,str_hour);
+await make_reservation(page,username2,str_hour);
 
 //await page.screenshot({ path: "screenshots/select_hours.png" });
 
