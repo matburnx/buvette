@@ -17,7 +17,7 @@ const BU_LIST_SELECTOR = "#liste_site";
 
 const BDL_PICKER = "2";
 const BDL1_PICKER = "3";
-const BCPR_PICKER = "4";
+const BCPR_PICKER = "5";
 const GEOS_PICKER = "6";
 const MIR_PICKER = "7";
 const PICKERS = [BDL_PICKER,BDL1_PICKER,BCPR_PICKER,GEOS_PICKER,MIR_PICKER];
@@ -69,12 +69,12 @@ async function select_bu(page,bu_value) {
     await page.focus(BU_LIST_SELECTOR);
     await page.select(BU_LIST_SELECTOR,bu_value);
     await page.waitForNavigation();
+
+    await page.click(SEARCH_BUTTON);
+    await page.waitForNavigation();
 }
 
 async function search_room(page) {
-    await page.click(SEARCH_BUTTON);
-    await page.waitForNavigation();
-
     await page.select(NUMBER_OF_PLACES_SELECTOR,THREE_PLACES_OPTION);
     await page.click(FILTER_BUTTON);
     await page.waitForNavigation();
@@ -184,7 +184,6 @@ async function make_reservation(page, username2, username3=third_user, formatted
 
     await page.focus(HOURS_SELECTOR);
     await page.select(HOURS_SELECTOR,formatted_hour);
-
     await page.click(CONDITIONS_CHECKBOX);
 }
 
@@ -237,7 +236,7 @@ const page = await browser.newPage();
 console.log("Connecting...");
 await connect_to_site(page);
 
-//await page.screenshot({ path: "screenshots/logged.png" });
+await page.screenshot({ path: "screenshots/logged.png" });
 
 //SELECTION OF BU AND DAY
 
@@ -247,12 +246,12 @@ await select_day(page,str_date);
 console.log("Selecting BU...");
 await select_bu(page,picker);
 
-//await page.screenshot({ path: "screenshots/before_search.png" });
+await page.screenshot({ path: "screenshots/before_search.png" });
 
 console.log("Searching a room...");
 await search_room(page);
 
-//await page.screenshot({ path: "screenshots/select.png" });
+await page.screenshot({ path: "screenshots/select.png" });
 
 console.log("Looking up the availabilities...");
 let availabilities = await list_availabilities(page);
@@ -269,11 +268,15 @@ let str_hour = hours_to_formatted_string(start_time,max_length);
 console.log(str_hour);
 console.log("Making the reservation...");
 
-await make_reservation(page,username2,str_hour);
+await make_reservation(page,username2,username3,str_hour);
 
-//await page.screenshot({ path: "screenshots/select_hours.png" });
+await page.screenshot({ path: "screenshots/select_hours.png" });
 
-//page.click(VALIDATE_BUTTON);
+await page.waitForSelector(VALIDATE_BUTTON);
+await page.click(VALIDATE_BUTTON);
+await page.waitForNavigation();
+
+await page.screenshot({ path: "screenshots/validation.png" });
 
 console.log("Done");
 await browser.close();
